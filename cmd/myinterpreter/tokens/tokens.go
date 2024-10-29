@@ -2,53 +2,53 @@ package tokens
 
 import "fmt"
 
-type TokenType uint8
+type TokenType string
 
 const (
 	// Single-character tokens
-	LeftParen TokenType = iota
-	RightParen
-	LeftBrace
-	RightBrace
-	Comma
-	Dot
-	Minus
-	Plus
-	Semicolon
-	Slash
-	Star
+	LeftParen  TokenType = "LEFT_PAREN"
+	RightParen TokenType = "RIGHT_PAREN"
+	LeftBrace  TokenType = "LEFT_BRACE"
+	RightBrace TokenType = "RIGHT_BRACE"
+	Comma      TokenType = "COMMA"
+	Dot        TokenType = "DOT"
+	Minus      TokenType = "MINUS"
+	Plus       TokenType = "PLUS"
+	Semicolon  TokenType = "SEMICOLON"
+	Slash      TokenType = "SLASH"
+	Star       TokenType = "STAR"
 	// One or two character tokens
-	Bang
-	BangEqual
-	Equal
-	EqualEqual
-	Greater
-	GreaterEqual
-	Less
-	LessEqual
+	Bang         TokenType = "BANG"
+	BangEqual    TokenType = "BANG_EQUAL"
+	Equal        TokenType = "EQUAL"
+	EqualEqual   TokenType = "EQUAL_EQUAL"
+	Greater      TokenType = "GREATER"
+	GreaterEqual TokenType = "GREATER_EQUAL"
+	Less         TokenType = "LESS"
+	LessEqual    TokenType = "LESS_EQUAL"
 	// Literals
-	Identifier
-	String
-	Number
+	Identifier TokenType = "IDENTIFIER"
+	String     TokenType = "STRING"
+	Number     TokenType = "NUMBER"
 	// Keywords
-	And
-	Class
-	Else
-	False
-	Fun
-	For
-	If
-	Nil
-	Or
-	Print
-	Return
-	Super
-	This
-	True
-	Var
-	While
+	And    TokenType = "AND"
+	Class  TokenType = "CLASS"
+	Else   TokenType = "ELSE"
+	False  TokenType = "FALSE"
+	Fun    TokenType = "FUN"
+	For    TokenType = "FOR"
+	If     TokenType = "IF"
+	Nil    TokenType = "NIL"
+	Or     TokenType = "OR"
+	Print  TokenType = "PRINT"
+	Return TokenType = "RETURN"
+	Super  TokenType = "SUPER"
+	This   TokenType = "THIS"
+	True   TokenType = "TRUE"
+	Var    TokenType = "VAR"
+	While  TokenType = "WHILE"
 
-	EOF
+	EOF TokenType = "EOF"
 )
 
 type Token struct {
@@ -59,5 +59,5 @@ type Token struct {
 }
 
 func (t *Token) String() string {
-	return fmt.Sprintf("%d %s %s", t.Type, t.Lexeme, t.Literal)
+	return fmt.Sprintf("%s %s %v", t.Type, t.Lexeme, t.Literal)
 }

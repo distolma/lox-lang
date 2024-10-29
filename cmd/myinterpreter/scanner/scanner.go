@@ -20,12 +20,12 @@ func NewScanner(source string) *Scanner {
 }
 
 func (s *Scanner) ScanTokens() []tokens.Token {
-	if !s.isAtEnd() {
+	for !s.isAtEnd() {
 		s.start = s.current
 		s.scanToken()
 	}
 
-	s.tokens = append(s.tokens, tokens.Token{Type: tokens.EOF, Line: s.line})
+	s.tokens = append(s.tokens, tokens.Token{Type: tokens.EOF, Line: s.line, Literal: "null"})
 	return s.tokens
 }
 
@@ -95,8 +95,10 @@ func (s *Scanner) scanToken() {
 	default:
 		if s.isDigit(char) {
 			s.number()
+		} else if s.isAlpha(char) {
+			s.identifier()
 		} else {
-			fmt.Print("Unexpected character.")
+			fmt.Print("Unexpected character.", string(char))
 		}
 	}
 }
@@ -153,7 +155,7 @@ func (s *Scanner) identifier() {
 }
 
 func (s *Scanner) addToken(tokenType tokens.TokenType) {
-	s.addTokenWithLiteral(tokenType, nil)
+	s.addTokenWithLiteral(tokenType, "null")
 }
 
 func (s *Scanner) addTokenWithLiteral(tokenType tokens.TokenType, literal interface{}) {
