@@ -1,6 +1,8 @@
-package tokens
+package token
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type TokenType string
 
@@ -59,5 +61,18 @@ type Token struct {
 }
 
 func (t *Token) String() string {
-	return fmt.Sprintf("%s %s %v", t.Type, t.Lexeme, t.Literal)
+	literal := t.Literal
+
+	if literal == nil {
+		literal = "null"
+	}
+
+	if v, ok := t.Literal.(float64); ok {
+		if v == float64(int(v)) {
+			literal = fmt.Sprintf("%.1f", v)
+		} else {
+			literal = fmt.Sprintf("%g", v)
+		}
+	}
+	return fmt.Sprintf("%s %s %s", t.Type, t.Lexeme, literal)
 }

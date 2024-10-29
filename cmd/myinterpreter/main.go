@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"os"
 
+	logerror "github.com/distolma/golox/cmd/myinterpreter/log_error"
 	"github.com/distolma/golox/cmd/myinterpreter/scanner"
 )
+
+var log = &logerror.LogError{}
 
 func main() {
 	if len(os.Args) < 3 {
@@ -24,17 +27,7 @@ func main() {
 	// Uncomment this block to pass the first stage
 
 	filename := os.Args[2]
-	fileContents, err := os.ReadFile(filename)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
-		os.Exit(1)
-	}
-
-	if len(fileContents) > 0 {
-		run(string(fileContents))
-	} else {
-		fmt.Println("EOF  null") // Placeholder, remove this line when implementing the scanner
-	}
+	runFile(filename)
 }
 
 func runPrompt() {
@@ -48,20 +41,26 @@ func runPrompt() {
 
 		line := inputScanner.Text()
 		run(line)
+		log.HadError = false
 	}
 }
 
 func runFile(path string) {
 	file, err := os.ReadFile(path)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
+		os.Exit(1)
 	}
 
 	run(string(file))
+
+	if log.HadError {
+		os.Exit(65)
+	}
 }
 
 func run(source string) {
-	scan := scanner.NewScanner(source)
+	scan := scanner.NewScanner(source, log)
 	tokens := scan.ScanTokens()
 
 	for _, token := range tokens {
