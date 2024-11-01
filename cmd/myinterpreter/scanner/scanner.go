@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/distolma/golox/cmd/myinterpreter/ast"
 	logerror "github.com/distolma/golox/cmd/myinterpreter/log_error"
-	"github.com/distolma/golox/cmd/myinterpreter/token"
 )
 
 type Scanner struct {
 	source  string
 	log     *logerror.LogError
-	tokens  []token.Token
+	tokens  []ast.Token
 	current int
 	line    int
 	start   int
@@ -21,13 +21,13 @@ func NewScanner(source string, log *logerror.LogError) *Scanner {
 	return &Scanner{source: source, line: 1, log: log}
 }
 
-func (s *Scanner) ScanTokens() []token.Token {
+func (s *Scanner) ScanTokens() []ast.Token {
 	for !s.isAtEnd() {
 		s.start = s.current
 		s.scanToken()
 	}
 
-	s.tokens = append(s.tokens, token.Token{Type: token.EOF, Line: s.line})
+	s.tokens = append(s.tokens, ast.Token{Type: ast.EOF, Line: s.line})
 	return s.tokens
 }
 
@@ -35,48 +35,48 @@ func (s *Scanner) scanToken() {
 	char := s.advance()
 	switch char {
 	case '(':
-		s.addToken(token.LeftParen)
+		s.addToken(ast.LeftParen)
 	case ')':
-		s.addToken(token.RightParen)
+		s.addToken(ast.RightParen)
 	case '{':
-		s.addToken(token.LeftBrace)
+		s.addToken(ast.LeftBrace)
 	case '}':
-		s.addToken(token.RightBrace)
+		s.addToken(ast.RightBrace)
 	case ',':
-		s.addToken(token.Comma)
+		s.addToken(ast.Comma)
 	case '.':
-		s.addToken(token.Dot)
+		s.addToken(ast.Dot)
 	case '-':
-		s.addToken(token.Minus)
+		s.addToken(ast.Minus)
 	case '+':
-		s.addToken(token.Plus)
+		s.addToken(ast.Plus)
 	case ';':
-		s.addToken(token.Semicolon)
+		s.addToken(ast.Semicolon)
 	case '*':
-		s.addToken(token.Star)
+		s.addToken(ast.Star)
 	case '!':
 		if s.match('=') {
-			s.addToken(token.BangEqual)
+			s.addToken(ast.BangEqual)
 		} else {
-			s.addToken(token.Bang)
+			s.addToken(ast.Bang)
 		}
 	case '=':
 		if s.match('=') {
-			s.addToken(token.EqualEqual)
+			s.addToken(ast.EqualEqual)
 		} else {
-			s.addToken(token.Equal)
+			s.addToken(ast.Equal)
 		}
 	case '<':
 		if s.match('=') {
-			s.addToken(token.LessEqual)
+			s.addToken(ast.LessEqual)
 		} else {
-			s.addToken(token.Less)
+			s.addToken(ast.Less)
 		}
 	case '>':
 		if s.match('=') {
-			s.addToken(token.GreaterEqual)
+			s.addToken(ast.GreaterEqual)
 		} else {
-			s.addToken(token.Greater)
+			s.addToken(ast.Greater)
 		}
 	case '/':
 		if s.match('/') {
@@ -84,7 +84,7 @@ func (s *Scanner) scanToken() {
 				s.advance()
 			}
 		} else {
-			s.addToken(token.Slash)
+			s.addToken(ast.Slash)
 		}
 	case ' ':
 	case '\r':
@@ -122,7 +122,7 @@ func (s *Scanner) string() {
 	s.advance()
 
 	value := s.source[s.start+1 : s.current-1]
-	s.addTokenWithLiteral(token.String, value)
+	s.addTokenWithLiteral(ast.String, value)
 }
 
 func (s *Scanner) number() {
@@ -139,7 +139,7 @@ func (s *Scanner) number() {
 	}
 
 	value, _ := strconv.ParseFloat(s.source[s.start:s.current], 64)
-	s.addTokenWithLiteral(token.Number, value)
+	s.addTokenWithLiteral(ast.Number, value)
 }
 
 func (s *Scanner) identifier() {
@@ -150,18 +150,18 @@ func (s *Scanner) identifier() {
 	text := s.source[s.start:s.current]
 	tokenType, found := keywords[text]
 	if !found {
-		tokenType = token.Identifier
+		tokenType = ast.Identifier
 	}
 
 	s.addToken(tokenType)
 }
 
-func (s *Scanner) addToken(tokenType token.TokenType) {
+func (s *Scanner) addToken(tokenType ast.TokenType) {
 	s.addTokenWithLiteral(tokenType, nil)
 }
 
-func (s *Scanner) addTokenWithLiteral(tokenType token.TokenType, literal interface{}) {
-	token := token.Token{
+func (s *Scanner) addTokenWithLiteral(tokenType ast.TokenType, literal interface{}) {
+	token := ast.Token{
 		Lexeme:  s.source[s.start:s.current],
 		Type:    tokenType,
 		Literal: literal,
@@ -170,23 +170,23 @@ func (s *Scanner) addTokenWithLiteral(tokenType token.TokenType, literal interfa
 	s.tokens = append(s.tokens, token)
 }
 
-var keywords = map[string]token.TokenType{
-	"and":    token.And,
-	"class":  token.Class,
-	"else":   token.Else,
-	"false":  token.False,
-	"for":    token.For,
-	"fun":    token.Fun,
-	"if":     token.If,
-	"nil":    token.Nil,
-	"or":     token.Or,
-	"print":  token.Print,
-	"return": token.Return,
-	"super":  token.Super,
-	"this":   token.This,
-	"true":   token.True,
-	"var":    token.Var,
-	"while":  token.While,
+var keywords = map[string]ast.TokenType{
+	"and":    ast.And,
+	"class":  ast.Class,
+	"else":   ast.Else,
+	"false":  ast.False,
+	"for":    ast.For,
+	"fun":    ast.Fun,
+	"if":     ast.If,
+	"nil":    ast.Nil,
+	"or":     ast.Or,
+	"print":  ast.Print,
+	"return": ast.Return,
+	"super":  ast.Super,
+	"this":   ast.This,
+	"true":   ast.True,
+	"var":    ast.Var,
+	"while":  ast.While,
 }
 
 func (s *Scanner) isAtEnd() bool {

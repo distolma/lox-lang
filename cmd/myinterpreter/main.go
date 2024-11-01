@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/distolma/golox/cmd/myinterpreter/ast"
 	logerror "github.com/distolma/golox/cmd/myinterpreter/log_error"
+	"github.com/distolma/golox/cmd/myinterpreter/parser"
 	"github.com/distolma/golox/cmd/myinterpreter/scanner"
 )
 
@@ -19,7 +21,7 @@ func main() {
 
 	command := os.Args[1]
 
-	if command != "tokenize" {
+	if command != "tokenize" && command != "parse" {
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
 		os.Exit(1)
 	}
@@ -27,10 +29,10 @@ func main() {
 	// Uncomment this block to pass the first stage
 
 	filename := os.Args[2]
-	runFile(filename)
+	runFile(filename, command)
 }
 
-func runPrompt() {
+func runPrompt(command string) {
 	inputScanner := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -40,30 +42,45 @@ func runPrompt() {
 		}
 
 		line := inputScanner.Text()
-		run(line)
+		run(line, command)
 		log.HadError = false
 	}
 }
 
-func runFile(path string) {
+func runFile(path string, command string) {
 	file, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
 		os.Exit(1)
 	}
 
-	run(string(file))
+	run(string(file), command)
 
 	if log.HadError {
 		os.Exit(65)
 	}
 }
 
-func run(source string) {
+func run(source string, command string) {
 	scan := scanner.NewScanner(source, log)
 	tokens := scan.ScanTokens()
 
-	for _, token := range tokens {
-		fmt.Println(token.String())
+	if command == "tokenize" {
+		for _, token := range tokens {
+			fmt.Println(token.String())
+		}
+	}
+
+	if command == "parse" {
+		parser := parser.NewParser(tokens, log)
+		expression := parser.Parse()
+
+		if log.HadError {
+			return
+		}
+
+		printer := ast.AstPrinter{}
+		result := printer.Print(expression)
+		fmt.Println(result)
 	}
 }
