@@ -55,10 +55,6 @@ func runFile(path string, command string) {
 	}
 
 	run(string(file), command)
-
-	if log.HadError {
-		os.Exit(65)
-	}
 }
 
 func run(source string, command string) {
@@ -71,12 +67,16 @@ func run(source string, command string) {
 		}
 	}
 
+	if log.HadError {
+		os.Exit(65)
+	}
+
 	if command == "parse" {
 		parser := parser.NewParser(tokens, log)
 		expression := parser.Parse()
 
 		if log.HadError {
-			return
+			os.Exit(65)
 		}
 
 		printer := ast.AstPrinter{}
