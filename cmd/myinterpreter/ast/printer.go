@@ -20,7 +20,18 @@ func (p *AstPrinter) VisitLiteralExpr(expr *Literal) interface{} {
 	if expr.Value == nil {
 		return "nil"
 	}
-	return fmt.Sprintf("%v", expr.Value)
+
+	literal := expr.Value
+
+	if v, ok := literal.(float64); ok {
+		if v == float64(int(v)) {
+			literal = fmt.Sprintf("%.1f", v)
+		} else {
+			literal = fmt.Sprintf("%g", v)
+		}
+	}
+
+	return fmt.Sprintf("%v", literal)
 }
 
 func (p *AstPrinter) VisitUnaryExpr(expr *Unary) interface{} {
