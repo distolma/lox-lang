@@ -8,7 +8,8 @@ import (
 )
 
 type LogError struct {
-	HadError bool
+	HadError        bool
+	HadRuntimeError bool
 }
 
 func (l *LogError) report(line int, where string, message string) {
@@ -29,4 +30,8 @@ func (l *LogError) TokenError(token ast.Token, message string) {
 	}
 
 	l.report(token.Line, where, message)
+}
+
+func (l *LogError) RuntimeError() {
+	l.HadRuntimeError = true
 }

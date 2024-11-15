@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/distolma/golox/cmd/myinterpreter/ast"
+	"github.com/distolma/golox/cmd/myinterpreter/interpreter"
 	logerror "github.com/distolma/golox/cmd/myinterpreter/log_error"
 	"github.com/distolma/golox/cmd/myinterpreter/parser"
 	"github.com/distolma/golox/cmd/myinterpreter/scanner"
@@ -21,7 +22,7 @@ func main() {
 
 	command := os.Args[1]
 
-	if command != "tokenize" && command != "parse" {
+	if command != "tokenize" && command != "parse" && command != "evaluate" {
 		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
 		os.Exit(1)
 	}
@@ -65,22 +66,36 @@ func run(source string, command string) {
 		for _, token := range tokens {
 			fmt.Println(token.String())
 		}
+
+		if log.HadError {
+			os.Exit(65)
+		}
+		return
 	}
 
 	if log.HadError {
 		os.Exit(65)
 	}
 
+	parser := parser.NewParser(tokens, log)
+	expression := parser.Parse()
+
+	if log.HadError {
+		os.Exit(65)
+	}
+
 	if command == "parse" {
-		parser := parser.NewParser(tokens, log)
-		expression := parser.Parse()
-
-		if log.HadError {
-			os.Exit(65)
-		}
-
 		printer := ast.AstPrinter{}
 		result := printer.Print(expression)
 		fmt.Println(result)
+		return
+	}
+
+	interpreter := interpreter.NewInterpreter()
+
+	if command == "evaluate" {
+		value := interpreter.Interpret(expression)
+
+		fmt.Println(value)
 	}
 }
