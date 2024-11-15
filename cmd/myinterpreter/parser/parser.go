@@ -29,7 +29,7 @@ func (p *Parser) Parse() []ast.Stmt {
 	}()
 
 	for !p.isAtEnd() {
-		statements = append(statements, p.statement())
+		statements = append(statements, p.declaration())
 	}
 
 	return statements
@@ -53,6 +53,24 @@ func (p *Parser) expression() ast.Expr {
 	return p.equality()
 }
 
+func (p *Parser) declaration() ast.Stmt {
+	defer func() {
+		if err := recover(); err != nil {
+			if _, ok := err.(ParseError); ok {
+				p.synchronize()
+			} else {
+				panic(err)
+			}
+		}
+	}()
+
+	if p.match(ast.TVar) {
+		return p.varDeclaration()
+	}
+
+	return p.statement()
+}
+
 func (p *Parser) statement() ast.Stmt {
 	if p.match(ast.TPrint) {
 		return p.printStatement()
@@ -64,6 +82,18 @@ func (p *Parser) printStatement() ast.Stmt {
 	value := p.expression()
 	p.consume(ast.TSemicolon, "Expect ';' after value.")
 	return &ast.Print{Expression: value}
+}
+
+func (p *Parser) varDeclaration() ast.Stmt {
+	name := p.consume(ast.TIdentifier, "Expect variable name.")
+
+	var initializer ast.Expr
+	if p.match(ast.TEqual) {
+		initializer = p.expression()
+	}
+
+	p.consume(ast.TSemicolon, "Expect ';' after variable declaration.")
+	return &ast.Var{Name: name, Initializer: initializer}
 }
 
 func (p *Parser) expressionStatement() ast.Stmt {
@@ -145,6 +175,8 @@ func (p *Parser) primary() ast.Expr {
 		return &ast.Literal{Value: nil}
 	} else if p.match(ast.TNumber, ast.TString) {
 		return &ast.Literal{Value: p.previous().Literal}
+	} else if p.match(ast.TIdentifier) {
+		return &ast.Variable{Name: p.previous()}
 	} else if p.match(ast.TLeftParen) {
 		expr := p.expression()
 		p.consume(ast.TRightParen, "Expect ')' after expression.")

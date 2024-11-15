@@ -21,8 +21,8 @@ const (
 )
 
 type Lox struct {
-	interpreter *interpreter.Interpreter
 	log         *logerror.LogError
+	interpreter *interpreter.Interpreter
 }
 
 func NewLox() *Lox {

@@ -13,11 +13,13 @@ func main() {
 		"Grouping : Expression Expr",
 		"Literal  : Value interface{}",
 		"Unary    : Right Expr, Operator Token",
+		"Variable : Name Token",
 	},
 	)
 	defineAst("./cmd/myinterpreter/ast", "Stmt", []string{
 		"Expression : Expression Expr",
 		"Print      : Expression Expr",
+		"Var        : Initializer Expr, Name Token",
 	},
 	)
 }

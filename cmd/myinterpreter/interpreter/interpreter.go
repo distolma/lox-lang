@@ -4,15 +4,22 @@ import (
 	"fmt"
 
 	"github.com/distolma/golox/cmd/myinterpreter/ast"
+	"github.com/distolma/golox/cmd/myinterpreter/environment"
 	logerror "github.com/distolma/golox/cmd/myinterpreter/log_error"
 )
 
 type Interpreter struct {
-	log *logerror.LogError
+	log         *logerror.LogError
+	environment environment.Environment
 }
 
 func NewInterpreter(log *logerror.LogError) *Interpreter {
-	return &Interpreter{log: log}
+	environment := environment.NewEnvironment()
+
+	return &Interpreter{
+		log:         log,
+		environment: *environment,
+	}
 }
 
 func (i *Interpreter) Interpret(statements []ast.Stmt) {
@@ -66,6 +73,14 @@ func (i *Interpreter) VisitUnaryExpr(expr *ast.Unary) interface{} {
 
 	// unreachable
 	return nil
+}
+
+func (i *Interpreter) VisitVariableExpr(expr *ast.Variable) interface{} {
+	value, err := i.environment.Get(expr.Name.Lexeme)
+	if err != nil {
+		panic(NewRuntimeError(expr.Name, err.Error()))
+	}
+	return value
 }
 
 func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary) interface{} {
@@ -137,6 +152,16 @@ func (i *Interpreter) VisitExpressionStmt(stmt *ast.Expression) interface{} {
 func (i *Interpreter) VisitPrintStmt(stmt *ast.Print) interface{} {
 	value := i.evaluate(stmt.Expression)
 	fmt.Println(i.stringify(value))
+	return nil
+}
+
+func (i *Interpreter) VisitVarStmt(stmt *ast.Var) interface{} {
+	var value interface{}
+	if stmt.Initializer != nil {
+		value = i.evaluate(stmt.Initializer)
+	}
+
+	i.environment.Define(stmt.Name.Lexeme, value)
 	return nil
 }
 

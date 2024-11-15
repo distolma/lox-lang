@@ -22,6 +22,10 @@ func (p *AstPrinter) VisitBinaryExpr(expr *Binary) interface{} {
 	return p.parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right)
 }
 
+func (p *AstPrinter) VisitVariableExpr(expr *Variable) interface{} {
+	return expr.Name.Lexeme
+}
+
 func (p *AstPrinter) VisitGroupingExpr(expr *Grouping) interface{} {
 	return p.parenthesize("group", expr.Expression)
 }
@@ -54,6 +58,13 @@ func (p *AstPrinter) VisitExpressionStmt(stmt *Expression) interface{} {
 
 func (p *AstPrinter) VisitPrintStmt(stmt *Print) interface{} {
 	return p.parenthesize("print", stmt.Expression)
+}
+
+func (p *AstPrinter) VisitVarStmt(stmt *Var) interface{} {
+	if stmt.Initializer != nil {
+		return p.parenthesize("var "+stmt.Name.Lexeme, stmt.Initializer)
+	}
+	return "(var " + stmt.Name.Lexeme + ")"
 }
 
 func (p *AstPrinter) execute(stmt Stmt) {
