@@ -7,14 +7,14 @@ import (
 )
 
 type RuntimeError struct {
-	message string
-	token   ast.Token
+	Message string
+	Token   ast.Token
 }
 
-func NewRuntimeError(token ast.Token, message string) *RuntimeError {
-	return &RuntimeError{token: token, message: message}
+func NewRuntimeError(token ast.Token, message string) RuntimeError {
+	return RuntimeError{Token: token, Message: message}
 }
 
 func (re *RuntimeError) Error() string {
-	return fmt.Sprintf("%s\n[line %d]", re.message, re.token.Line)
+	return fmt.Sprintf("%s\n[line %d]", re.Message, re.Token.Line)
 }

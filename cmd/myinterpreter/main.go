@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"slices"
 
 	"github.com/distolma/golox/cmd/myinterpreter/ast"
 	"github.com/distolma/golox/cmd/myinterpreter/interpreter"
@@ -12,76 +13,97 @@ import (
 	"github.com/distolma/golox/cmd/myinterpreter/scanner"
 )
 
-var log = &logerror.LogError{}
+const (
+	ExitError            = 1
+	ExitCodeUsage        = 64
+	ExitCodeSyntaxError  = 65
+	ExitCodeRuntimeError = 70
+)
+
+type Lox struct {
+	interpreter *interpreter.Interpreter
+	log         *logerror.LogError
+}
+
+func NewLox() *Lox {
+	log := &logerror.LogError{}
+
+	return &Lox{
+		log:         log,
+		interpreter: interpreter.NewInterpreter(log),
+	}
+}
 
 func main() {
+	lox := NewLox()
+
 	if len(os.Args) < 3 {
 		fmt.Fprintln(os.Stderr, "Usage: ./your_program.sh tokenize <filename>")
-		os.Exit(1)
+		os.Exit(ExitError)
 	}
 
 	command := os.Args[1]
+	filename := os.Args[2]
 
-	if command != "tokenize" && command != "parse" && command != "evaluate" {
-		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", command)
-		os.Exit(1)
+	validCommands := []string{"tokenize", "parse", "evaluate", "run"}
+	if slices.Contains(validCommands, command) {
+		lox.runFile(filename, command)
+		return
 	}
 
-	// Uncomment this block to pass the first stage
-
-	filename := os.Args[2]
-	runFile(filename, command)
+	lox.runPrompt()
 }
 
-func runPrompt(command string) {
+func (l *Lox) runPrompt() {
 	inputScanner := bufio.NewScanner(os.Stdin)
-
 	for {
 		fmt.Print("> ")
 		if !inputScanner.Scan() {
 			break
 		}
-
 		line := inputScanner.Text()
-		run(line, command)
-		log.HadError = false
+		l.run(line)
+		l.log.HadError = false
 	}
 }
 
-func runFile(path string, command string) {
+func (l *Lox) runFile(path string, command string) {
 	file, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
-		os.Exit(1)
+		os.Exit(ExitError)
+	}
+	l.runCommand(string(file), command)
+
+	if l.log.HadError {
+		os.Exit(ExitCodeSyntaxError)
 	}
 
-	run(string(file), command)
+	if l.log.HadRuntimeError {
+		os.Exit(ExitCodeRuntimeError)
+	}
 }
 
-func run(source string, command string) {
-	scan := scanner.NewScanner(source, log)
+func (l *Lox) runCommand(source string, command string) {
+	scan := scanner.NewScanner(source, l.log)
 	tokens := scan.ScanTokens()
+
+	if l.log.HadError {
+		os.Exit(ExitCodeSyntaxError)
+	}
 
 	if command == "tokenize" {
 		for _, token := range tokens {
 			fmt.Println(token.String())
 		}
-
-		if log.HadError {
-			os.Exit(65)
-		}
 		return
 	}
 
-	if log.HadError {
-		os.Exit(65)
-	}
-
-	parser := parser.NewParser(tokens, log)
+	parser := parser.NewParser(tokens, l.log)
 	expression := parser.Parse()
 
-	if log.HadError {
-		os.Exit(65)
+	if l.log.HadError || expression == nil {
+		os.Exit(ExitCodeSyntaxError)
 	}
 
 	if command == "parse" {
@@ -91,11 +113,25 @@ func run(source string, command string) {
 		return
 	}
 
-	interpreter := interpreter.NewInterpreter()
-
 	if command == "evaluate" {
-		value := interpreter.Interpret(expression)
-
+		value := l.interpreter.Interpret(expression)
+		if l.log.HadRuntimeError {
+			os.Exit(ExitCodeRuntimeError)
+		}
 		fmt.Println(value)
 	}
+}
+
+func (l *Lox) run(source string) {
+	scanner := scanner.NewScanner(source, l.log)
+	tokens := scanner.ScanTokens()
+
+	parser := parser.NewParser(tokens, l.log)
+	expression := parser.Parse()
+
+	if l.log.HadError {
+		return
+	}
+
+	l.interpreter.Interpret(expression)
 }

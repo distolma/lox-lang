@@ -32,6 +32,7 @@ func (l *LogError) TokenError(token ast.Token, message string) {
 	l.report(token.Line, where, message)
 }
 
-func (l *LogError) RuntimeError() {
+func (l *LogError) RuntimeError(token ast.Token, message string) {
+	fmt.Fprintf(os.Stderr, "%s \n[line: %d]", message, token.Line)
 	l.HadRuntimeError = true
 }

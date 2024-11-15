@@ -4,20 +4,25 @@ import (
 	"fmt"
 
 	"github.com/distolma/golox/cmd/myinterpreter/ast"
+	logerror "github.com/distolma/golox/cmd/myinterpreter/log_error"
 )
 
-type Interpreter struct{}
+type Interpreter struct {
+	log *logerror.LogError
+}
 
-func NewInterpreter() *Interpreter {
-	return &Interpreter{}
+func NewInterpreter(log *logerror.LogError) *Interpreter {
+	return &Interpreter{log: log}
 }
 
 func (i *Interpreter) Interpret(expr ast.Expr) string {
 	defer func() {
 		if err := recover(); err != nil {
-			if _, ok := err.(RuntimeError); ok {
+			if runtimeError, ok := err.(RuntimeError); ok {
+				i.log.RuntimeError(runtimeError.Token, runtimeError.Message)
 			} else {
-				panic(err)
+				// fmt.Println(err)
+				// panic(err)
 			}
 		}
 	}()
@@ -61,6 +66,9 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary) interface{} {
 		return left.(float64) / right.(float64)
 	case ast.Star:
 		i.checkNumberOperands(expr.Operator, left, right)
+		if right.(float64) == 0 {
+			panic(NewRuntimeError(expr.Operator, "Division by zero."))
+		}
 		return left.(float64) * right.(float64)
 	case ast.Plus:
 		leftFloat, leftOk := left.(float64)
@@ -135,5 +143,5 @@ func (i *Interpreter) checkNumberOperands(operator ast.Token, left interface{}, 
 		return
 	}
 
-	panic(NewRuntimeError(operator, "Operands must be number."))
+	panic(NewRuntimeError(operator, "Operands must be numbers."))
 }
