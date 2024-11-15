@@ -39,8 +39,8 @@ func main() {
 	lox := NewLox()
 
 	if len(os.Args) < 3 {
-		fmt.Fprintln(os.Stderr, "Usage: ./your_program.sh tokenize <filename>")
-		os.Exit(ExitError)
+		lox.runPrompt()
+		return
 	}
 
 	command := os.Args[1]
@@ -48,11 +48,20 @@ func main() {
 
 	validCommands := []string{"tokenize", "parse", "evaluate", "run"}
 	if slices.Contains(validCommands, command) {
-		lox.runFile(filename, command)
+		switch command {
+		case "tokenize":
+			lox.tokenize(filename)
+		case "parse":
+			lox.parse(filename)
+		case "evaluate":
+			lox.evaluate(filename)
+		case "run":
+			lox.runFile(filename)
+		default:
+			lox.runFile(filename)
+		}
 		return
 	}
-
-	lox.runPrompt()
 }
 
 func (l *Lox) runPrompt() {
@@ -68,13 +77,13 @@ func (l *Lox) runPrompt() {
 	}
 }
 
-func (l *Lox) runFile(path string, command string) {
+func (l *Lox) runFile(path string) {
 	file, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
 		os.Exit(ExitError)
 	}
-	l.runCommand(string(file), command)
+	l.run(string(file))
 
 	if l.log.HadError {
 		os.Exit(ExitCodeSyntaxError)
@@ -85,7 +94,48 @@ func (l *Lox) runFile(path string, command string) {
 	}
 }
 
-func (l *Lox) runCommand(source string, command string) {
+func (l *Lox) run(source string) {
+	scanner := scanner.NewScanner(source, l.log)
+	tokens := scanner.ScanTokens()
+
+	parser := parser.NewParser(tokens, l.log)
+	statements := parser.Parse()
+
+	if l.log.HadError {
+		return
+	}
+
+	l.interpreter.Interpret(statements)
+}
+
+func (l *Lox) tokenize(path string) {
+	file, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
+		os.Exit(ExitError)
+	}
+	source := string(file)
+
+	scan := scanner.NewScanner(source, l.log)
+	tokens := scan.ScanTokens()
+
+	for _, token := range tokens {
+		fmt.Println(token.String())
+	}
+
+	if l.log.HadError {
+		os.Exit(ExitCodeSyntaxError)
+	}
+}
+
+func (l *Lox) parse(path string) {
+	file, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
+		os.Exit(ExitError)
+	}
+	source := string(file)
+
 	scan := scanner.NewScanner(source, l.log)
 	tokens := scan.ScanTokens()
 
@@ -93,46 +143,39 @@ func (l *Lox) runCommand(source string, command string) {
 		os.Exit(ExitCodeSyntaxError)
 	}
 
-	if command == "tokenize" {
-		for _, token := range tokens {
-			fmt.Println(token.String())
-		}
-		return
-	}
-
 	parser := parser.NewParser(tokens, l.log)
-	expression := parser.Parse()
+	expression := parser.ParseExpression()
 
-	if l.log.HadError || expression == nil {
+	if l.log.HadError {
 		os.Exit(ExitCodeSyntaxError)
 	}
 
-	if command == "parse" {
-		printer := ast.AstPrinter{}
-		result := printer.Print(expression)
-		fmt.Println(result)
-		return
-	}
-
-	if command == "evaluate" {
-		value := l.interpreter.Interpret(expression)
-		if l.log.HadRuntimeError {
-			os.Exit(ExitCodeRuntimeError)
-		}
-		fmt.Println(value)
-	}
+	printer := ast.AstPrinter{}
+	result := printer.PrintExpression(expression)
+	fmt.Println(result)
 }
 
-func (l *Lox) run(source string) {
-	scanner := scanner.NewScanner(source, l.log)
-	tokens := scanner.ScanTokens()
+func (l *Lox) evaluate(path string) {
+	file, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
+		os.Exit(ExitError)
+	}
+	source := string(file)
 
-	parser := parser.NewParser(tokens, l.log)
-	expression := parser.Parse()
+	scan := scanner.NewScanner(source, l.log)
+	tokens := scan.ScanTokens()
 
 	if l.log.HadError {
-		return
+		os.Exit(ExitCodeSyntaxError)
 	}
 
-	l.interpreter.Interpret(expression)
+	parser := parser.NewParser(tokens, l.log)
+	expression := parser.ParseExpression()
+
+	value := l.interpreter.InterpretExpression(expression)
+	if l.log.HadRuntimeError {
+		os.Exit(ExitCodeRuntimeError)
+	}
+	fmt.Println(value)
 }

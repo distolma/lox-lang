@@ -1,10 +1,20 @@
 package ast
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type AstPrinter struct{}
 
-func (p *AstPrinter) Print(expr Expr) string {
+func (p *AstPrinter) Print(statements []Stmt) string {
+	var result string
+	for _, stmt := range statements {
+		result += stmt.Accept(p).(string) + "\n"
+	}
+	return result
+}
+
+func (p *AstPrinter) PrintExpression(expr Expr) string {
 	return expr.Accept(p).(string)
 }
 
@@ -36,6 +46,18 @@ func (p *AstPrinter) VisitLiteralExpr(expr *Literal) interface{} {
 
 func (p *AstPrinter) VisitUnaryExpr(expr *Unary) interface{} {
 	return p.parenthesize(expr.Operator.Lexeme, expr.Right)
+}
+
+func (p *AstPrinter) VisitExpressionStmt(stmt *Expression) interface{} {
+	return p.parenthesize("expr", stmt.Expression)
+}
+
+func (p *AstPrinter) VisitPrintStmt(stmt *Print) interface{} {
+	return p.parenthesize("print", stmt.Expression)
+}
+
+func (p *AstPrinter) execute(stmt Stmt) {
+	stmt.Accept(p)
 }
 
 func (p *AstPrinter) parenthesize(name string, exprs ...Expr) string {

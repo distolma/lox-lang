@@ -15,14 +15,29 @@ func NewInterpreter(log *logerror.LogError) *Interpreter {
 	return &Interpreter{log: log}
 }
 
-func (i *Interpreter) Interpret(expr ast.Expr) string {
+func (i *Interpreter) Interpret(statements []ast.Stmt) {
 	defer func() {
 		if err := recover(); err != nil {
 			if runtimeError, ok := err.(RuntimeError); ok {
 				i.log.RuntimeError(runtimeError.Token, runtimeError.Message)
 			} else {
-				// fmt.Println(err)
-				// panic(err)
+				panic(err)
+			}
+		}
+	}()
+
+	for _, statement := range statements {
+		i.execute(statement)
+	}
+}
+
+func (i *Interpreter) InterpretExpression(expr ast.Expr) string {
+	defer func() {
+		if err := recover(); err != nil {
+			if runtimeError, ok := err.(RuntimeError); ok {
+				i.log.RuntimeError(runtimeError.Token, runtimeError.Message)
+			} else {
+				panic(err)
 			}
 		}
 	}()
@@ -108,6 +123,21 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary) interface{} {
 
 func (i *Interpreter) evaluate(expr ast.Expr) interface{} {
 	return expr.Accept(i)
+}
+
+func (i *Interpreter) execute(stmt ast.Stmt) {
+	stmt.Accept(i)
+}
+
+func (i *Interpreter) VisitExpressionStmt(stmt *ast.Expression) interface{} {
+	i.evaluate(stmt.Expression)
+	return nil
+}
+
+func (i *Interpreter) VisitPrintStmt(stmt *ast.Print) interface{} {
+	value := i.evaluate(stmt.Expression)
+	fmt.Println(i.stringify(value))
+	return nil
 }
 
 func (i *Interpreter) isTruthy(object interface{}) bool {

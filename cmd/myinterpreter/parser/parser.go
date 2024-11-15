@@ -15,7 +15,27 @@ func NewParser(tokens []ast.Token, log *logerror.LogError) *Parser {
 	return &Parser{tokens: tokens, current: 0, log: log}
 }
 
-func (p *Parser) Parse() ast.Expr {
+func (p *Parser) Parse() []ast.Stmt {
+	var statements []ast.Stmt
+
+	defer func() {
+		if err := recover(); err != nil {
+			if _, ok := err.(ParseError); ok {
+				p.synchronize()
+			} else {
+				panic(err)
+			}
+		}
+	}()
+
+	for !p.isAtEnd() {
+		statements = append(statements, p.statement())
+	}
+
+	return statements
+}
+
+func (p *Parser) ParseExpression() ast.Expr {
 	defer func() {
 		if err := recover(); err != nil {
 			if _, ok := err.(ParseError); ok {
@@ -31,6 +51,25 @@ func (p *Parser) Parse() ast.Expr {
 
 func (p *Parser) expression() ast.Expr {
 	return p.equality()
+}
+
+func (p *Parser) statement() ast.Stmt {
+	if p.match(ast.TPrint) {
+		return p.printStatement()
+	}
+	return p.expressionStatement()
+}
+
+func (p *Parser) printStatement() ast.Stmt {
+	value := p.expression()
+	p.consume(ast.TSemicolon, "Expect ';' after value.")
+	return &ast.Print{Expression: value}
+}
+
+func (p *Parser) expressionStatement() ast.Stmt {
+	value := p.expression()
+	p.consume(ast.TSemicolon, "Expect ';' after expression.")
+	return &ast.Expression{Expression: value}
 }
 
 func (p *Parser) equality() ast.Expr {
