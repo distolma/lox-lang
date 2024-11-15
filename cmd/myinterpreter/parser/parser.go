@@ -36,7 +36,7 @@ func (p *Parser) expression() ast.Expr {
 func (p *Parser) equality() ast.Expr {
 	expr := p.comparison()
 
-	for p.match(ast.BangEqual, ast.EqualEqual) {
+	for p.match(ast.TBangEqual, ast.TEqualEqual) {
 		operator := p.previous()
 		right := p.comparison()
 
@@ -49,7 +49,7 @@ func (p *Parser) equality() ast.Expr {
 func (p *Parser) comparison() ast.Expr {
 	expr := p.term()
 
-	for p.match(ast.Greater, ast.GreaterEqual, ast.Less, ast.LessEqual) {
+	for p.match(ast.TGreater, ast.TGreaterEqual, ast.TLess, ast.TLessEqual) {
 		operator := p.previous()
 		right := p.term()
 
@@ -62,7 +62,7 @@ func (p *Parser) comparison() ast.Expr {
 func (p *Parser) term() ast.Expr {
 	expr := p.factor()
 
-	for p.match(ast.Plus, ast.Minus) {
+	for p.match(ast.TPlus, ast.TMinus) {
 		operator := p.previous()
 		right := p.factor()
 
@@ -75,7 +75,7 @@ func (p *Parser) term() ast.Expr {
 func (p *Parser) factor() ast.Expr {
 	expr := p.unary()
 
-	for p.match(ast.Slash, ast.Star) {
+	for p.match(ast.TSlash, ast.TStar) {
 		operator := p.previous()
 		right := p.unary()
 
@@ -86,7 +86,7 @@ func (p *Parser) factor() ast.Expr {
 }
 
 func (p *Parser) unary() ast.Expr {
-	if p.match(ast.Bang, ast.Minus) {
+	if p.match(ast.TBang, ast.TMinus) {
 		operator := p.previous()
 		right := p.unary()
 
@@ -98,17 +98,17 @@ func (p *Parser) unary() ast.Expr {
 }
 
 func (p *Parser) primary() ast.Expr {
-	if p.match(ast.False) {
+	if p.match(ast.TFalse) {
 		return &ast.Literal{Value: false}
-	} else if p.match(ast.True) {
+	} else if p.match(ast.TTrue) {
 		return &ast.Literal{Value: true}
-	} else if p.match(ast.Nil) {
+	} else if p.match(ast.TNil) {
 		return &ast.Literal{Value: nil}
-	} else if p.match(ast.Number, ast.String) {
+	} else if p.match(ast.TNumber, ast.TString) {
 		return &ast.Literal{Value: p.previous().Literal}
-	} else if p.match(ast.LeftParen) {
+	} else if p.match(ast.TLeftParen) {
 		expr := p.expression()
-		p.consume(ast.RightParen, "Expect ')' after expression.")
+		p.consume(ast.TRightParen, "Expect ')' after expression.")
 		return &ast.Grouping{Expression: expr}
 	}
 
@@ -120,19 +120,19 @@ func (p *Parser) synchronize() {
 	p.advance()
 
 	for !p.isAtEnd() {
-		if p.previous().Type == ast.Semicolon {
+		if p.previous().Type == ast.TSemicolon {
 			return
 		}
 
 		switch p.peek().Type {
-		case ast.Class:
-		case ast.Fun:
-		case ast.Var:
-		case ast.For:
-		case ast.If:
-		case ast.While:
-		case ast.Print:
-		case ast.Return:
+		case ast.TClass:
+		case ast.TFun:
+		case ast.TVar:
+		case ast.TFor:
+		case ast.TIf:
+		case ast.TWhile:
+		case ast.TPrint:
+		case ast.TReturn:
 			return
 		}
 

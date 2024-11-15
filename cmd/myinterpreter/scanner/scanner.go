@@ -35,48 +35,48 @@ func (s *Scanner) scanToken() {
 	char := s.advance()
 	switch char {
 	case '(':
-		s.addToken(ast.LeftParen)
+		s.addToken(ast.TLeftParen)
 	case ')':
-		s.addToken(ast.RightParen)
+		s.addToken(ast.TRightParen)
 	case '{':
-		s.addToken(ast.LeftBrace)
+		s.addToken(ast.TLeftBrace)
 	case '}':
-		s.addToken(ast.RightBrace)
+		s.addToken(ast.TRightBrace)
 	case ',':
-		s.addToken(ast.Comma)
+		s.addToken(ast.TComma)
 	case '.':
-		s.addToken(ast.Dot)
+		s.addToken(ast.TDot)
 	case '-':
-		s.addToken(ast.Minus)
+		s.addToken(ast.TMinus)
 	case '+':
-		s.addToken(ast.Plus)
+		s.addToken(ast.TPlus)
 	case ';':
-		s.addToken(ast.Semicolon)
+		s.addToken(ast.TSemicolon)
 	case '*':
-		s.addToken(ast.Star)
+		s.addToken(ast.TStar)
 	case '!':
 		if s.match('=') {
-			s.addToken(ast.BangEqual)
+			s.addToken(ast.TBangEqual)
 		} else {
-			s.addToken(ast.Bang)
+			s.addToken(ast.TBang)
 		}
 	case '=':
 		if s.match('=') {
-			s.addToken(ast.EqualEqual)
+			s.addToken(ast.TEqualEqual)
 		} else {
-			s.addToken(ast.Equal)
+			s.addToken(ast.TEqual)
 		}
 	case '<':
 		if s.match('=') {
-			s.addToken(ast.LessEqual)
+			s.addToken(ast.TLessEqual)
 		} else {
-			s.addToken(ast.Less)
+			s.addToken(ast.TLess)
 		}
 	case '>':
 		if s.match('=') {
-			s.addToken(ast.GreaterEqual)
+			s.addToken(ast.TGreaterEqual)
 		} else {
-			s.addToken(ast.Greater)
+			s.addToken(ast.TGreater)
 		}
 	case '/':
 		if s.match('/') {
@@ -84,7 +84,7 @@ func (s *Scanner) scanToken() {
 				s.advance()
 			}
 		} else {
-			s.addToken(ast.Slash)
+			s.addToken(ast.TSlash)
 		}
 	case ' ':
 	case '\r':
@@ -122,7 +122,7 @@ func (s *Scanner) string() {
 	s.advance()
 
 	value := s.source[s.start+1 : s.current-1]
-	s.addTokenWithLiteral(ast.String, value)
+	s.addTokenWithLiteral(ast.TString, value)
 }
 
 func (s *Scanner) number() {
@@ -139,7 +139,7 @@ func (s *Scanner) number() {
 	}
 
 	value, _ := strconv.ParseFloat(s.source[s.start:s.current], 64)
-	s.addTokenWithLiteral(ast.Number, value)
+	s.addTokenWithLiteral(ast.TNumber, value)
 }
 
 func (s *Scanner) identifier() {
@@ -150,7 +150,7 @@ func (s *Scanner) identifier() {
 	text := s.source[s.start:s.current]
 	tokenType, found := keywords[text]
 	if !found {
-		tokenType = ast.Identifier
+		tokenType = ast.TIdentifier
 	}
 
 	s.addToken(tokenType)
@@ -171,22 +171,22 @@ func (s *Scanner) addTokenWithLiteral(tokenType ast.TokenType, literal interface
 }
 
 var keywords = map[string]ast.TokenType{
-	"and":    ast.And,
-	"class":  ast.Class,
-	"else":   ast.Else,
-	"false":  ast.False,
-	"for":    ast.For,
-	"fun":    ast.Fun,
-	"if":     ast.If,
-	"nil":    ast.Nil,
-	"or":     ast.Or,
-	"print":  ast.Print,
-	"return": ast.Return,
-	"super":  ast.Super,
-	"this":   ast.This,
-	"true":   ast.True,
-	"var":    ast.Var,
-	"while":  ast.While,
+	"and":    ast.TAnd,
+	"class":  ast.TClass,
+	"else":   ast.TElse,
+	"false":  ast.TFalse,
+	"for":    ast.TFor,
+	"fun":    ast.TFun,
+	"if":     ast.TIf,
+	"nil":    ast.TNil,
+	"or":     ast.TOr,
+	"print":  ast.TPrint,
+	"return": ast.TReturn,
+	"super":  ast.TSuper,
+	"this":   ast.TThis,
+	"true":   ast.TTrue,
+	"var":    ast.TVar,
+	"while":  ast.TWhile,
 }
 
 func (s *Scanner) isAtEnd() bool {

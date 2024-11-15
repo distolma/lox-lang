@@ -27,10 +27,11 @@ type Lox struct {
 
 func NewLox() *Lox {
 	log := &logerror.LogError{}
+	interpreter := interpreter.NewInterpreter(log)
 
 	return &Lox{
 		log:         log,
-		interpreter: interpreter.NewInterpreter(log),
+		interpreter: interpreter,
 	}
 }
 

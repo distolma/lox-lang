@@ -42,9 +42,9 @@ func (i *Interpreter) VisitUnaryExpr(expr *ast.Unary) interface{} {
 	right := i.evaluate(expr.Right)
 
 	switch expr.Operator.Type {
-	case ast.Bang:
+	case ast.TBang:
 		return !i.isTruthy(right)
-	case ast.Minus:
+	case ast.TMinus:
 		i.checkNumberOperand(expr.Operator, right)
 		return -right.(float64)
 	}
@@ -58,19 +58,19 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary) interface{} {
 	right := i.evaluate(expr.Right)
 
 	switch expr.Operator.Type {
-	case ast.Minus:
+	case ast.TMinus:
 		i.checkNumberOperands(expr.Operator, left, right)
 		return left.(float64) - right.(float64)
-	case ast.Slash:
+	case ast.TSlash:
 		i.checkNumberOperands(expr.Operator, left, right)
 		return left.(float64) / right.(float64)
-	case ast.Star:
+	case ast.TStar:
 		i.checkNumberOperands(expr.Operator, left, right)
 		if right.(float64) == 0 {
 			panic(NewRuntimeError(expr.Operator, "Division by zero."))
 		}
 		return left.(float64) * right.(float64)
-	case ast.Plus:
+	case ast.TPlus:
 		leftFloat, leftOk := left.(float64)
 		rightFloat, rightOk := right.(float64)
 		if leftOk && rightOk {
@@ -84,21 +84,21 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary) interface{} {
 		}
 
 		panic(NewRuntimeError(expr.Operator, "Operands must be two numbers or two strings."))
-	case ast.Greater:
+	case ast.TGreater:
 		i.checkNumberOperands(expr.Operator, left, right)
 		return left.(float64) > right.(float64)
-	case ast.GreaterEqual:
+	case ast.TGreaterEqual:
 		i.checkNumberOperands(expr.Operator, left, right)
 		return left.(float64) >= right.(float64)
-	case ast.Less:
+	case ast.TLess:
 		i.checkNumberOperands(expr.Operator, left, right)
 		return left.(float64) < right.(float64)
-	case ast.LessEqual:
+	case ast.TLessEqual:
 		i.checkNumberOperands(expr.Operator, left, right)
 		return left.(float64) <= right.(float64)
-	case ast.BangEqual:
+	case ast.TBangEqual:
 		return left != right
-	case ast.EqualEqual:
+	case ast.TEqualEqual:
 		return left == right
 	}
 

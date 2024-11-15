@@ -8,18 +8,22 @@ import (
 )
 
 func main() {
-	types := []string{
+	defineAst("./cmd/myinterpreter/ast", "Expr", []string{
 		"Binary   : Left Expr, Right Expr, Operator Token",
 		"Grouping : Expression Expr",
 		"Literal  : Value interface{}",
 		"Unary    : Right Expr, Operator Token",
-	}
-
-	defineAst("./cmd/myinterpreter/ast", "classes", types)
+	},
+	)
+	defineAst("./cmd/myinterpreter/ast", "Stmt", []string{
+		"Expression : Expression Expr",
+		"Print      : Expression Expr",
+	},
+	)
 }
 
 func defineAst(outputDir string, baseName string, types []string) {
-	path := filepath.Join(outputDir, baseName+".go")
+	path := filepath.Join(outputDir, strings.ToLower(baseName)+".go")
 	file, err := os.Create(path)
 	if err != nil {
 		panic(err)
@@ -28,18 +32,20 @@ func defineAst(outputDir string, baseName string, types []string) {
 
 	file.WriteString("package ast\n\n")
 
-	defineVisitor(file, types)
+	defineStruct(file, baseName)
+
+	defineVisitor(file, baseName, types)
 
 	for _, t := range types {
 		parts := strings.Split(t, ":")
 		className := strings.TrimSpace(parts[0])
 		fields := strings.Split(strings.TrimSpace(parts[1]), ",")
 
-		defineType(file, className, fields)
+		defineType(file, baseName, className, fields)
 	}
 }
 
-func defineType(file *os.File, className string, fields []string) {
+func defineType(file *os.File, baseName string, className string, fields []string) {
 	fmt.Fprintf(file, "type %s struct {\n", className)
 
 	for _, field := range fields {
@@ -53,21 +59,27 @@ func defineType(file *os.File, className string, fields []string) {
 	file.WriteString("}\n\n")
 
 	alias := strings.ToLower(string(className[0]))
-	fmt.Fprintf(file, "func (%s *%s) Accept(visitor AstVisitor) interface {} {\n", alias, className)
-	fmt.Fprintf(file, "\t return visitor.Visit%sExpr(%s)\n", className, alias)
+	fmt.Fprintf(file, "func (%s *%s) Accept(visitor %sVisitor) interface{} {\n", alias, className, baseName)
+	fmt.Fprintf(file, "\treturn visitor.Visit%s%s(%s)\n", className, baseName, alias)
 
 	file.WriteString("}\n\n")
 }
 
-func defineVisitor(file *os.File, types []string) {
-	file.WriteString("type AstVisitor interface {\n")
+func defineVisitor(file *os.File, baseName string, types []string) {
+	fmt.Fprintf(file, "type %sVisitor interface {\n", baseName)
 
 	for _, t := range types {
 		parts := strings.Split(t, ":")
 		className := strings.TrimSpace(parts[0])
 
-		fmt.Fprintf(file, "\tVisit%sExpr (expt *%s) interface{}\n", className, className)
+		fmt.Fprintf(file, "\tVisit%s%s(expt *%s) interface{}\n", className, baseName, className)
 	}
 
+	file.WriteString("}\n\n")
+}
+
+func defineStruct(file *os.File, baseName string) {
+	fmt.Fprintf(file, "type %s interface {\n", baseName)
+	fmt.Fprintf(file, "\tAccept(visitor %sVisitor) interface{}\n", baseName)
 	file.WriteString("}\n\n")
 }
