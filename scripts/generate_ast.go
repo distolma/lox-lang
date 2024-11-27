@@ -18,6 +18,7 @@ func main() {
 	},
 	)
 	defineAst("./cmd/myinterpreter/ast", "Stmt", []string{
+		"Block      : Statements []Stmt",
 		"Expression : Expression Expr",
 		"Print      : Expression Expr",
 		"Var        : Initializer Expr, Name Token",

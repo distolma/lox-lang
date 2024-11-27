@@ -67,6 +67,14 @@ func (p *AstPrinter) VisitVarStmt(stmt *Var) interface{} {
 	return "(var " + stmt.Name.Lexeme + ")"
 }
 
+func (p *AstPrinter) VisitBlockStmt(stmt *Block) interface{} {
+	var result string
+	for _, statement := range stmt.Statements {
+		result += statement.Accept(p).(string) + "\n"
+	}
+	return "(block\n" + result + ")"
+}
+
 func (p *AstPrinter) VisitAssignExpr(expr *Assign) interface{} {
 	return p.parenthesize("assign "+expr.Name.Lexeme, expr.Value)
 }

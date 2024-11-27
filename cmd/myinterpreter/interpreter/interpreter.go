@@ -10,15 +10,15 @@ import (
 
 type Interpreter struct {
 	log         *logerror.LogError
-	environment environment.Environment
+	environment *environment.Environment
 }
 
 func NewInterpreter(log *logerror.LogError) *Interpreter {
-	environment := environment.NewEnvironment()
+	environment := environment.NewEnvironment(nil)
 
 	return &Interpreter{
 		log:         log,
-		environment: *environment,
+		environment: environment,
 	}
 }
 
@@ -142,6 +142,24 @@ func (i *Interpreter) evaluate(expr ast.Expr) interface{} {
 
 func (i *Interpreter) execute(stmt ast.Stmt) {
 	stmt.Accept(i)
+}
+
+func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *environment.Environment) {
+	previous := i.environment
+
+	defer func() {
+		i.environment = previous
+	}()
+
+	i.environment = environment
+	for _, statement := range statements {
+		i.execute(statement)
+	}
+}
+
+func (i *Interpreter) VisitBlockStmt(stmt *ast.Block) interface{} {
+	i.executeBlock(stmt.Statements, environment.NewEnvironment(i.environment))
+	return nil
 }
 
 func (i *Interpreter) VisitExpressionStmt(stmt *ast.Expression) interface{} {

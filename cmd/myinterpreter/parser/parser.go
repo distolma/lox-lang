@@ -75,6 +75,9 @@ func (p *Parser) statement() ast.Stmt {
 	if p.match(ast.TPrint) {
 		return p.printStatement()
 	}
+	if p.match(ast.TLeftBrace) {
+		return &ast.Block{Statements: p.block()}
+	}
 	return p.expressionStatement()
 }
 
@@ -100,6 +103,18 @@ func (p *Parser) expressionStatement() ast.Stmt {
 	value := p.expression()
 	p.consume(ast.TSemicolon, "Expect ';' after expression.")
 	return &ast.Expression{Expression: value}
+}
+
+func (p *Parser) block() []ast.Stmt {
+	var statements []ast.Stmt
+
+	for !p.check(ast.TRightBrace) && !p.isAtEnd() {
+		statements = append(statements, p.declaration())
+	}
+
+	p.consume(ast.TRightBrace, "Expect '}' after block.")
+
+	return statements
 }
 
 func (p *Parser) assignment() ast.Expr {
