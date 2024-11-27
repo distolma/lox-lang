@@ -67,6 +67,10 @@ func (p *AstPrinter) VisitVarStmt(stmt *Var) interface{} {
 	return "(var " + stmt.Name.Lexeme + ")"
 }
 
+func (p *AstPrinter) VisitAssignExpr(expr *Assign) interface{} {
+	return p.parenthesize("assign "+expr.Name.Lexeme, expr.Value)
+}
+
 func (p *AstPrinter) execute(stmt Stmt) {
 	stmt.Accept(p)
 }

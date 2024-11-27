@@ -9,6 +9,7 @@ import (
 
 func main() {
 	defineAst("./cmd/myinterpreter/ast", "Expr", []string{
+		"Assign   : Value Expr, Name Token",
 		"Binary   : Left Expr, Right Expr, Operator Token",
 		"Grouping : Expression Expr",
 		"Literal  : Value interface{}",

@@ -20,6 +20,15 @@ func (e *Environment) Get(name string) (interface{}, error) {
 	return nil, fmt.Errorf("Undefined variable '%s'.", name)
 }
 
+func (e *Environment) Assign(name string, value interface{}) error {
+	if _, ok := e.values[name]; ok {
+		e.Define(name, value)
+		return nil
+	}
+
+	return fmt.Errorf("Undefined variable '%s'.", name)
+}
+
 func (e *Environment) Define(name string, value interface{}) {
 	e.values[name] = value
 }

@@ -50,7 +50,7 @@ func (p *Parser) ParseExpression() ast.Expr {
 }
 
 func (p *Parser) expression() ast.Expr {
-	return p.equality()
+	return p.assignment()
 }
 
 func (p *Parser) declaration() ast.Stmt {
@@ -100,6 +100,23 @@ func (p *Parser) expressionStatement() ast.Stmt {
 	value := p.expression()
 	p.consume(ast.TSemicolon, "Expect ';' after expression.")
 	return &ast.Expression{Expression: value}
+}
+
+func (p *Parser) assignment() ast.Expr {
+	expr := p.equality()
+
+	if p.match(ast.TEqual) {
+		equals := p.previous()
+		value := p.assignment()
+
+		if varExpr, ok := expr.(*ast.Variable); ok {
+			return &ast.Assign{Name: varExpr.Name, Value: value}
+		}
+
+		p.error(equals, "Invalid assignment target.")
+	}
+
+	return expr
 }
 
 func (p *Parser) equality() ast.Expr {

@@ -165,6 +165,15 @@ func (i *Interpreter) VisitVarStmt(stmt *ast.Var) interface{} {
 	return nil
 }
 
+func (i *Interpreter) VisitAssignExpr(expr *ast.Assign) interface{} {
+	value := i.evaluate(expr.Value)
+	err := i.environment.Assign(expr.Name.Lexeme, value)
+	if err != nil {
+		panic(NewRuntimeError(expr.Name, err.Error()))
+	}
+	return value
+}
+
 func (i *Interpreter) isTruthy(object interface{}) bool {
 	if object == nil {
 		return false
