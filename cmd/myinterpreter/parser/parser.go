@@ -72,6 +72,9 @@ func (p *Parser) declaration() ast.Stmt {
 }
 
 func (p *Parser) statement() ast.Stmt {
+	if p.match(ast.TFor) {
+		return p.forStatement()
+	}
 	if p.match(ast.TIf) {
 		return p.ifStatement()
 	}
@@ -85,6 +88,48 @@ func (p *Parser) statement() ast.Stmt {
 		return &ast.Block{Statements: p.block()}
 	}
 	return p.expressionStatement()
+}
+
+func (p *Parser) forStatement() ast.Stmt {
+	p.consume(ast.TLeftParen, "Expect '(' after 'for'.")
+
+	var initializer ast.Stmt
+	if p.match(ast.TSemicolon) {
+		initializer = nil
+	} else if p.match(ast.TVar) {
+		initializer = p.varDeclaration()
+	} else {
+		initializer = p.expressionStatement()
+	}
+
+	var condition ast.Expr
+	if !p.check(ast.TSemicolon) {
+		condition = p.expression()
+	}
+	p.consume(ast.TSemicolon, "Expect ';' after loop condition.")
+
+	var increment ast.Expr
+	if !p.check(ast.TRightParen) {
+		increment = p.expression()
+	}
+	p.consume(ast.TRightParen, "Expect ')' after for clauses.")
+
+	body := p.statement()
+
+	if increment != nil {
+		body = &ast.Block{Statements: []ast.Stmt{body, &ast.Expression{Expression: increment}}}
+	}
+
+	if condition == nil {
+		condition = &ast.Literal{Value: true}
+	}
+	body = &ast.While{Condition: condition, Body: body}
+
+	if initializer != nil {
+		body = &ast.Block{Statements: []ast.Stmt{initializer, body}}
+	}
+
+	return body
 }
 
 func (p *Parser) ifStatement() ast.Stmt {
