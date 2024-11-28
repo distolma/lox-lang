@@ -20,6 +20,7 @@ func main() {
 	defineAst("./cmd/myinterpreter/ast", "Stmt", []string{
 		"Block      : Statements []Stmt",
 		"Expression : Expression Expr",
+		"If         : Condition Expr, ThenBranch Stmt, ElseBranch Stmt",
 		"Print      : Expression Expr",
 		"Var        : Initializer Expr, Name Token",
 	},

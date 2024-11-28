@@ -72,6 +72,9 @@ func (p *Parser) declaration() ast.Stmt {
 }
 
 func (p *Parser) statement() ast.Stmt {
+	if p.match(ast.TIf) {
+		return p.ifStatement()
+	}
 	if p.match(ast.TPrint) {
 		return p.printStatement()
 	}
@@ -79,6 +82,20 @@ func (p *Parser) statement() ast.Stmt {
 		return &ast.Block{Statements: p.block()}
 	}
 	return p.expressionStatement()
+}
+
+func (p *Parser) ifStatement() ast.Stmt {
+	p.consume(ast.TLeftParen, "Expect '(' after 'if'.")
+	condition := p.expression()
+	p.consume(ast.TRightParen, "Expect ')' after if condition.")
+
+	thenBranch := p.statement()
+	var elseBranch ast.Stmt
+	if p.match(ast.TElse) {
+		elseBranch = p.statement()
+	}
+
+	return &ast.If{Condition: condition, ThenBranch: thenBranch, ElseBranch: elseBranch}
 }
 
 func (p *Parser) printStatement() ast.Stmt {

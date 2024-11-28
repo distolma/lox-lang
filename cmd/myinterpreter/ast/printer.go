@@ -75,6 +75,14 @@ func (p *AstPrinter) VisitBlockStmt(stmt *Block) interface{} {
 	return "(block\n" + result + ")"
 }
 
+func (p *AstPrinter) VisitIfStmt(stmt *If) interface{} {
+	result := p.parenthesize("if", stmt.Condition) + " " + stmt.ThenBranch.Accept(p).(string)
+	if stmt.ElseBranch != nil {
+		result += " " + stmt.ElseBranch.Accept(p).(string)
+	}
+	return result
+}
+
 func (p *AstPrinter) VisitAssignExpr(expr *Assign) interface{} {
 	return p.parenthesize("assign "+expr.Name.Lexeme, expr.Value)
 }
