@@ -78,6 +78,9 @@ func (p *Parser) statement() ast.Stmt {
 	if p.match(ast.TPrint) {
 		return p.printStatement()
 	}
+	if p.match(ast.TWhile) {
+		return p.whileStatement()
+	}
 	if p.match(ast.TLeftBrace) {
 		return &ast.Block{Statements: p.block()}
 	}
@@ -99,9 +102,9 @@ func (p *Parser) ifStatement() ast.Stmt {
 }
 
 func (p *Parser) printStatement() ast.Stmt {
-	value := p.expression()
+	expr := p.expression()
 	p.consume(ast.TSemicolon, "Expect ';' after value.")
-	return &ast.Print{Expression: value}
+	return &ast.Print{Expression: expr}
 }
 
 func (p *Parser) varDeclaration() ast.Stmt {
@@ -114,6 +117,15 @@ func (p *Parser) varDeclaration() ast.Stmt {
 
 	p.consume(ast.TSemicolon, "Expect ';' after variable declaration.")
 	return &ast.Var{Name: name, Initializer: initializer}
+}
+
+func (p *Parser) whileStatement() ast.Stmt {
+	p.consume(ast.TLeftParen, "Expect '(' after 'while'.")
+	condition := p.expression()
+	p.consume(ast.TRightParen, "Expect ')' after condition.")
+	body := p.statement()
+
+	return &ast.While{Condition: condition, Body: body}
 }
 
 func (p *Parser) expressionStatement() ast.Stmt {
@@ -154,7 +166,7 @@ func (p *Parser) assignment() ast.Expr {
 func (p *Parser) or() ast.Expr {
 	expr := p.and()
 
-	if p.match(ast.TOr) {
+	for p.match(ast.TOr) {
 		operator := p.previous()
 		right := p.and()
 		expr = &ast.Logical{Left: expr, Operator: operator, Right: right}
@@ -166,7 +178,7 @@ func (p *Parser) or() ast.Expr {
 func (p *Parser) and() ast.Expr {
 	expr := p.equality()
 
-	if p.match(ast.TAnd) {
+	for p.match(ast.TAnd) {
 		operator := p.previous()
 		right := p.equality()
 		expr = &ast.Logical{Left: expr, Operator: operator, Right: right}

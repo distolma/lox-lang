@@ -24,6 +24,7 @@ func main() {
 		"If         : Condition Expr, ThenBranch Stmt, ElseBranch Stmt",
 		"Print      : Expression Expr",
 		"Var        : Initializer Expr, Name Token",
+		"While      : Condition Expr, Body Stmt",
 	},
 	)
 }

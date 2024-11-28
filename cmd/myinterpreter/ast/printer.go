@@ -87,6 +87,10 @@ func (p *AstPrinter) VisitIfStmt(stmt *If) interface{} {
 	return result
 }
 
+func (p *AstPrinter) VisitWhileStmt(stmt *While) interface{} {
+	return p.parenthesize("while", stmt.Condition) + " " + stmt.Body.Accept(p).(string)
+}
+
 func (p *AstPrinter) VisitAssignExpr(expr *Assign) interface{} {
 	return p.parenthesize("assign "+expr.Name.Lexeme, expr.Value)
 }

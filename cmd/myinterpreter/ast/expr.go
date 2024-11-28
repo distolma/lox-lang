@@ -16,7 +16,7 @@ type ExprVisitor interface {
 
 type Assign struct {
 	Value Expr
-	Name  Token
+	Name Token
 }
 
 func (a *Assign) Accept(visitor ExprVisitor) interface{} {
@@ -24,8 +24,8 @@ func (a *Assign) Accept(visitor ExprVisitor) interface{} {
 }
 
 type Binary struct {
-	Left     Expr
-	Right    Expr
+	Left Expr
+	Right Expr
 	Operator Token
 }
 
@@ -50,8 +50,8 @@ func (l *Literal) Accept(visitor ExprVisitor) interface{} {
 }
 
 type Logical struct {
-	Left     Expr
-	Right    Expr
+	Left Expr
+	Right Expr
 	Operator Token
 }
 
@@ -60,7 +60,7 @@ func (l *Logical) Accept(visitor ExprVisitor) interface{} {
 }
 
 type Unary struct {
-	Right    Expr
+	Right Expr
 	Operator Token
 }
 
@@ -75,3 +75,4 @@ type Variable struct {
 func (v *Variable) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitVariableExpr(v)
 }
+
