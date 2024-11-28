@@ -135,7 +135,7 @@ func (p *Parser) block() []ast.Stmt {
 }
 
 func (p *Parser) assignment() ast.Expr {
-	expr := p.equality()
+	expr := p.or()
 
 	if p.match(ast.TEqual) {
 		equals := p.previous()
@@ -146,6 +146,30 @@ func (p *Parser) assignment() ast.Expr {
 		}
 
 		p.error(equals, "Invalid assignment target.")
+	}
+
+	return expr
+}
+
+func (p *Parser) or() ast.Expr {
+	expr := p.and()
+
+	if p.match(ast.TOr) {
+		operator := p.previous()
+		right := p.and()
+		expr = &ast.Logical{Left: expr, Operator: operator, Right: right}
+	}
+
+	return expr
+}
+
+func (p *Parser) and() ast.Expr {
+	expr := p.equality()
+
+	if p.match(ast.TAnd) {
+		operator := p.previous()
+		right := p.equality()
+		expr = &ast.Logical{Left: expr, Operator: operator, Right: right}
 	}
 
 	return expr

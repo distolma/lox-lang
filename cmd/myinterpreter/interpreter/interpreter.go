@@ -56,6 +56,22 @@ func (i *Interpreter) VisitLiteralExpr(expr *ast.Literal) interface{} {
 	return expr.Value
 }
 
+func (i *Interpreter) VisitLogicalExpr(expr *ast.Logical) interface{} {
+	left := i.evaluate(expr.Left)
+
+	if expr.Operator.Type == ast.TOr {
+		if i.isTruthy(left) {
+			return left
+		}
+	} else {
+		if !i.isTruthy(left) {
+			return left
+		}
+	}
+
+	return i.evaluate(expr.Right)
+}
+
 func (i *Interpreter) VisitGroupingExpr(expr *ast.Grouping) interface{} {
 	return i.evaluate(expr.Expression)
 }

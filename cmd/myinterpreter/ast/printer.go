@@ -22,6 +22,10 @@ func (p *AstPrinter) VisitBinaryExpr(expr *Binary) interface{} {
 	return p.parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right)
 }
 
+func (p *AstPrinter) VisitLogicalExpr(expr *Logical) interface{} {
+	return p.parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right)
+}
+
 func (p *AstPrinter) VisitVariableExpr(expr *Variable) interface{} {
 	return expr.Name.Lexeme
 }
