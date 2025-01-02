@@ -1,1 +1,11 @@
-var language = "lox";
+for (var hello = 0; hello < 3;) print hello = hello + 1;
+
+fun sayHi(first, last) {
+  print "Hi, " + first + " " + last + "!";
+}
+
+sayHi("Dear", "Reader");
+
+print sayHi;
+
+print clock();

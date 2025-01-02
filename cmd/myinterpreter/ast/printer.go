@@ -30,6 +30,15 @@ func (p *AstPrinter) VisitVariableExpr(expr *Variable) interface{} {
 	return expr.Name.Lexeme
 }
 
+func (p *AstPrinter) VisitCallExpr(expr *Call) interface{} {
+	var result string
+	result += p.parenthesize("call", expr.Callee)
+	for _, arg := range expr.Arguments {
+		result += " " + arg.Accept(p).(string)
+	}
+	return result
+}
+
 func (p *AstPrinter) VisitGroupingExpr(expr *Grouping) interface{} {
 	return p.parenthesize("group", expr.Expression)
 }
@@ -58,6 +67,27 @@ func (p *AstPrinter) VisitUnaryExpr(expr *Unary) interface{} {
 
 func (p *AstPrinter) VisitExpressionStmt(stmt *Expression) interface{} {
 	return p.parenthesize("expr", stmt.Expression)
+}
+
+func (p *AstPrinter) VisitFunctionStmt(stmt *Function) interface{} {
+	var result string
+	result += "(fun " + stmt.Name.Lexeme + " ("
+
+	// Add parameters to the function definition.
+	for i, param := range stmt.Params {
+		if i > 0 {
+			result += " "
+		}
+		result += param.Lexeme
+	}
+	result += ") "
+
+	// Print the function body.
+	for _, bodyStmt := range stmt.Body {
+		result += bodyStmt.Accept(p).(string) + " "
+	}
+	result += ")"
+	return result
 }
 
 func (p *AstPrinter) VisitPrintStmt(stmt *Print) interface{} {

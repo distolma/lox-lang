@@ -7,6 +7,7 @@ type Stmt interface {
 type StmtVisitor interface {
 	VisitBlockStmt(expt *Block) interface{}
 	VisitExpressionStmt(expt *Expression) interface{}
+	VisitFunctionStmt(expt *Function) interface{}
 	VisitIfStmt(expt *If) interface{}
 	VisitPrintStmt(expt *Print) interface{}
 	VisitVarStmt(expt *Var) interface{}
@@ -29,8 +30,18 @@ func (e *Expression) Accept(visitor StmtVisitor) interface{} {
 	return visitor.VisitExpressionStmt(e)
 }
 
+type Function struct {
+	Name   Token
+	Params []Token
+	Body   []Stmt
+}
+
+func (f *Function) Accept(visitor StmtVisitor) interface{} {
+	return visitor.VisitFunctionStmt(f)
+}
+
 type If struct {
-	Condition Expr
+	Condition  Expr
 	ThenBranch Stmt
 	ElseBranch Stmt
 }
@@ -49,7 +60,7 @@ func (p *Print) Accept(visitor StmtVisitor) interface{} {
 
 type Var struct {
 	Initializer Expr
-	Name Token
+	Name        Token
 }
 
 func (v *Var) Accept(visitor StmtVisitor) interface{} {
@@ -58,10 +69,9 @@ func (v *Var) Accept(visitor StmtVisitor) interface{} {
 
 type While struct {
 	Condition Expr
-	Body Stmt
+	Body      Stmt
 }
 
 func (w *While) Accept(visitor StmtVisitor) interface{} {
 	return visitor.VisitWhileStmt(w)
 }
-

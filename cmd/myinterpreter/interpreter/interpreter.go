@@ -11,14 +11,17 @@ import (
 type Interpreter struct {
 	log         *logerror.LogError
 	environment *environment.Environment
+	globals     *environment.Environment
 }
 
 func NewInterpreter(log *logerror.LogError) *Interpreter {
-	environment := environment.NewEnvironment(nil)
+	globals := environment.NewEnvironment(nil)
+	globals.Define("clock", Clock{})
 
 	return &Interpreter{
 		log:         log,
-		environment: environment,
+		environment: globals,
+		globals:     globals,
 	}
 }
 
@@ -152,6 +155,26 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary) interface{} {
 	return nil
 }
 
+func (i *Interpreter) VisitCallExpr(expr *ast.Call) interface{} {
+	callee := i.evaluate(expr.Callee)
+
+	var arguments []interface{}
+	for _, argument := range expr.Arguments {
+		arguments = append(arguments, i.evaluate(argument))
+	}
+
+	function, ok := (callee).(Callable)
+	if !ok {
+		panic(NewRuntimeError(expr.Paren, "Can only call functions and classes."))
+	}
+
+	if len(arguments) != function.arity() {
+		panic(NewRuntimeError(expr.Paren, fmt.Sprintf("Expected %d arguments but got %d.", function.arity(), len(arguments))))
+	}
+
+	return function.call(i, arguments)
+}
+
 func (i *Interpreter) evaluate(expr ast.Expr) interface{} {
 	return expr.Accept(i)
 }
@@ -180,6 +203,12 @@ func (i *Interpreter) VisitBlockStmt(stmt *ast.Block) interface{} {
 
 func (i *Interpreter) VisitExpressionStmt(stmt *ast.Expression) interface{} {
 	i.evaluate(stmt.Expression)
+	return nil
+}
+
+func (i *Interpreter) VisitFunctionStmt(stmt *ast.Function) interface{} {
+	function := NewFunction(*stmt)
+	i.environment.Define(stmt.Name.Lexeme, function)
 	return nil
 }
 

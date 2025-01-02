@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/distolma/golox/cmd/myinterpreter/ast"
 	logerror "github.com/distolma/golox/cmd/myinterpreter/log_error"
 )
@@ -63,6 +65,10 @@ func (p *Parser) declaration() ast.Stmt {
 			}
 		}
 	}()
+
+	if p.match(ast.TFun) {
+		return p.function("function")
+	}
 
 	if p.match(ast.TVar) {
 		return p.varDeclaration()
@@ -179,6 +185,36 @@ func (p *Parser) expressionStatement() ast.Stmt {
 	return &ast.Expression{Expression: value}
 }
 
+func (p *Parser) function(kind string) *ast.Function {
+	name := p.consume(ast.TIdentifier, fmt.Sprintf("Expect %s name.", kind))
+
+	p.consume(ast.TLeftParen, fmt.Sprintf("Expact '(' after %s name.", kind))
+
+	var parameters []ast.Token
+	if !p.check(ast.TRightParen) {
+		for {
+			if len(parameters) >= 255 {
+				p.error(p.peek(), "Can't have more than 255 parameters.")
+			}
+
+			paramToken := p.consume(ast.TIdentifier, "Expect parameter name.")
+
+			parameters = append(parameters, paramToken)
+
+			if !p.match(ast.TComma) {
+				break
+			}
+		}
+	}
+
+	p.consume(ast.TRightParen, "Expect ')' after parameters.")
+
+	p.consume(ast.TLeftBrace, fmt.Sprintf("Expect '{' before %s body.", kind))
+	body := p.block()
+
+	return &ast.Function{Name: name, Params: parameters, Body: body}
+}
+
 func (p *Parser) block() []ast.Stmt {
 	var statements []ast.Stmt
 
@@ -293,7 +329,42 @@ func (p *Parser) unary() ast.Expr {
 
 	}
 
-	return p.primary()
+	return p.call()
+}
+
+func (p *Parser) finishCall(callee ast.Expr) ast.Expr {
+	var arguments []ast.Expr
+
+	if !p.check(ast.TRightParen) {
+		for {
+			if len(arguments) >= 255 {
+				p.error(p.peek(), "Can't have more than 255 arguments.")
+			}
+			arguments = append(arguments, p.expression())
+
+			if !p.match(ast.TComma) {
+				break
+			}
+		}
+	}
+
+	paren := p.consume(ast.TRightParen, "Expect ')' after arguments.")
+
+	return &ast.Call{Callee: callee, Arguments: arguments, Paren: paren}
+}
+
+func (p *Parser) call() ast.Expr {
+	expr := p.primary()
+
+	for {
+		if p.match(ast.TLeftParen) {
+			expr = p.finishCall(expr)
+		} else {
+			break
+		}
+	}
+
+	return expr
 }
 
 func (p *Parser) primary() ast.Expr {

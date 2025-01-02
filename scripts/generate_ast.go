@@ -11,6 +11,7 @@ func main() {
 	defineAst("./cmd/myinterpreter/ast", "Expr", []string{
 		"Assign   : Value Expr, Name Token",
 		"Binary   : Left Expr, Right Expr, Operator Token",
+		"Call     : Callee Expr, Paren Token, Arguments []Expr",
 		"Grouping : Expression Expr",
 		"Literal  : Value interface{}",
 		"Logical  : Left Expr, Right Expr, Operator Token",
@@ -21,6 +22,7 @@ func main() {
 	defineAst("./cmd/myinterpreter/ast", "Stmt", []string{
 		"Block      : Statements []Stmt",
 		"Expression : Expression Expr",
+		"Function   : Name Token, Params []Token, Body []Stmt",
 		"If         : Condition Expr, ThenBranch Stmt, ElseBranch Stmt",
 		"Print      : Expression Expr",
 		"Var        : Initializer Expr, Name Token",
