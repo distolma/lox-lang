@@ -14,10 +14,11 @@ type Callable interface {
 
 type Function struct {
 	declaraton ast.Function
+	closure    *environment.Environment
 }
 
-func NewFunction(declaraton ast.Function) *Function {
-	return &Function{declaraton}
+func NewFunction(declaraton ast.Function, env *environment.Environment) *Function {
+	return &Function{declaraton: declaraton, closure: env}
 }
 
 func (f *Function) arity() int {
@@ -28,8 +29,6 @@ func (f *Function) call(interpreter *Interpreter, arguments []interface{}) (retu
 	defer func() {
 		if err := recover(); err != nil {
 			if v, ok := err.(Return); ok {
-
-				fmt.Println(v.Value)
 				returnValue = v.Value
 				return
 			}
@@ -37,7 +36,7 @@ func (f *Function) call(interpreter *Interpreter, arguments []interface{}) (retu
 		}
 	}()
 
-	callEnv := environment.NewEnvironment(interpreter.globals)
+	callEnv := environment.NewEnvironment(f.closure)
 	for i, param := range f.declaraton.Params {
 		callEnv.Define(param.Lexeme, arguments[i])
 	}

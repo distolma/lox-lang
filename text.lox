@@ -1,11 +1,8 @@
-for (var hello = 0; hello < 3;) print hello = hello + 1;
-
-fun sayHi(first, last) {
-  print "Hi, " + first + " " + last + "!";
+fun fib(n) {
+  if (n < 2) return n;
+  return fib(n - 2) + fib(n - 1);
 }
 
-sayHi("Dear", "Reader");
-
-print sayHi;
-
-print clock();
+var start = clock();
+print fib(32) == 2178309;
+print (clock() - start) < 5;
