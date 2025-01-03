@@ -94,6 +94,19 @@ func (p *AstPrinter) VisitPrintStmt(stmt *Print) interface{} {
 	return p.parenthesize("print", stmt.Expression)
 }
 
+func (p *AstPrinter) VisitReturnStmt(stmt *Return) interface{} {
+	var result string
+	result += "(return"
+
+	// If there's a value to return, append it.
+	if stmt.Value != nil {
+		result += " " + stmt.Value.Accept(p).(string)
+	}
+
+	result += ")"
+	return result
+}
+
 func (p *AstPrinter) VisitVarStmt(stmt *Var) interface{} {
 	if stmt.Initializer != nil {
 		return p.parenthesize("var "+stmt.Name.Lexeme, stmt.Initializer)

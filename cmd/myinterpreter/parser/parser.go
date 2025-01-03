@@ -87,6 +87,9 @@ func (p *Parser) statement() ast.Stmt {
 	if p.match(ast.TPrint) {
 		return p.printStatement()
 	}
+	if p.match(ast.TReturn) {
+		return p.returnStatement()
+	}
 	if p.match(ast.TWhile) {
 		return p.whileStatement()
 	}
@@ -156,6 +159,16 @@ func (p *Parser) printStatement() ast.Stmt {
 	expr := p.expression()
 	p.consume(ast.TSemicolon, "Expect ';' after value.")
 	return &ast.Print{Expression: expr}
+}
+
+func (p *Parser) returnStatement() ast.Stmt {
+	keyword := p.previous()
+	var value ast.Expr
+	if !p.check(ast.TSemicolon) {
+		value = p.expression()
+	}
+	p.consume(ast.TSemicolon, "Expect ';' after return value.")
+	return &ast.Return{Keyword: keyword, Value: value}
 }
 
 func (p *Parser) varDeclaration() ast.Stmt {

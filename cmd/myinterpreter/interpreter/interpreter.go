@@ -122,6 +122,7 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary) interface{} {
 	case ast.TPlus:
 		leftFloat, leftOk := left.(float64)
 		rightFloat, rightOk := right.(float64)
+
 		if leftOk && rightOk {
 			return leftFloat + rightFloat
 		}
@@ -225,6 +226,14 @@ func (i *Interpreter) VisitPrintStmt(stmt *ast.Print) interface{} {
 	value := i.evaluate(stmt.Expression)
 	fmt.Println(i.stringify(value))
 	return nil
+}
+
+func (i *Interpreter) VisitReturnStmt(stmt *ast.Return) interface{} {
+	var value interface{}
+	if stmt.Value != nil {
+		value = i.evaluate(stmt.Value)
+	}
+	panic(Return{Value: value})
 }
 
 func (i *Interpreter) VisitVarStmt(stmt *ast.Var) interface{} {

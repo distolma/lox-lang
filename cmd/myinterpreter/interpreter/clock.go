@@ -9,7 +9,7 @@ func (c Clock) arity() int {
 }
 
 func (c Clock) call(_interpreter *Interpreter, _arguments []interface{}) interface{} {
-	return time.Now().UnixMilli()
+	return float64(time.Now().UnixMilli() / 1000)
 }
 
 func (c Clock) String() string {
