@@ -12,6 +12,7 @@ type Interpreter struct {
 	log         *logerror.LogError
 	environment *environment.Environment
 	globals     *environment.Environment
+	locals      map[ast.Expr]int
 }
 
 func NewInterpreter(log *logerror.LogError) *Interpreter {
@@ -22,6 +23,7 @@ func NewInterpreter(log *logerror.LogError) *Interpreter {
 		log:         log,
 		environment: globals,
 		globals:     globals,
+		locals:      make(map[ast.Expr]int),
 	}
 }
 
@@ -95,11 +97,18 @@ func (i *Interpreter) VisitUnaryExpr(expr *ast.Unary) interface{} {
 }
 
 func (i *Interpreter) VisitVariableExpr(expr *ast.Variable) interface{} {
-	value, err := i.environment.Get(expr.Name.Lexeme)
+	value, err := i.lookUpVariable(expr.Name, expr)
 	if err != nil {
 		panic(NewRuntimeError(expr.Name, err.Error()))
 	}
 	return value
+}
+
+func (i *Interpreter) lookUpVariable(name ast.Token, expr ast.Expr) (interface{}, error) {
+	if distance, ok := i.locals[expr]; ok {
+		return i.environment.GetAt(distance, name.Lexeme), nil
+	}
+	return i.globals.Get(name.Lexeme)
 }
 
 func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary) interface{} {
@@ -184,6 +193,10 @@ func (i *Interpreter) execute(stmt ast.Stmt) {
 	stmt.Accept(i)
 }
 
+func (i *Interpreter) Resolve(expr ast.Expr, depth int) {
+	i.locals[expr] = depth
+}
+
 func (i *Interpreter) executeBlock(statements []ast.Stmt, environment *environment.Environment) {
 	previous := i.environment
 
@@ -237,7 +250,7 @@ func (i *Interpreter) VisitReturnStmt(stmt *ast.Return) interface{} {
 }
 
 func (i *Interpreter) VisitVarStmt(stmt *ast.Var) interface{} {
-	var value interface{}
+	var value any
 	if stmt.Initializer != nil {
 		value = i.evaluate(stmt.Initializer)
 	}
@@ -255,9 +268,13 @@ func (i *Interpreter) VisitWhileStmt(stmt *ast.While) interface{} {
 
 func (i *Interpreter) VisitAssignExpr(expr *ast.Assign) interface{} {
 	value := i.evaluate(expr.Value)
-	err := i.environment.Assign(expr.Name.Lexeme, value)
-	if err != nil {
-		panic(NewRuntimeError(expr.Name, err.Error()))
+
+	if distance, ok := i.locals[expr]; ok {
+		i.environment.AssignAt(distance, expr.Name.Lexeme, value)
+	} else {
+		if err := i.globals.Assign(expr.Name.Lexeme, value); err != nil {
+			panic(NewRuntimeError(expr.Name, err.Error()))
+		}
 	}
 	return value
 }

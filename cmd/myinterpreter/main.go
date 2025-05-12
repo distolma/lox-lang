@@ -10,6 +10,7 @@ import (
 	"github.com/distolma/golox/cmd/myinterpreter/interpreter"
 	logerror "github.com/distolma/golox/cmd/myinterpreter/log_error"
 	"github.com/distolma/golox/cmd/myinterpreter/parser"
+	"github.com/distolma/golox/cmd/myinterpreter/resolver"
 	"github.com/distolma/golox/cmd/myinterpreter/scanner"
 )
 
@@ -100,6 +101,13 @@ func (l *Lox) run(source string) {
 
 	parser := parser.NewParser(tokens, l.log)
 	statements := parser.Parse()
+
+	if l.log.HadError {
+		return
+	}
+
+	resolver := resolver.NewResolver(l.interpreter, l.log)
+	resolver.ResolveStmts(statements)
 
 	if l.log.HadError {
 		return

@@ -1,8 +1,10 @@
-fun fib(n) {
-  if (n < 2) return n;
-  return fib(n - 2) + fib(n - 1);
-}
+var a = "global";
+{
+  fun showA() {
+    print a;
+  }
 
-var start = clock();
-print fib(32) == 2178309;
-print (clock() - start) < 5;
+  showA();
+  var a = "block";
+  showA();
+}

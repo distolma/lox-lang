@@ -41,3 +41,19 @@ func (e *Environment) Assign(name string, value interface{}) error {
 func (e *Environment) Define(name string, value interface{}) {
 	e.values[name] = value
 }
+
+func (e *Environment) GetAt(distance int, name string) interface{} {
+	return e.ancestor(distance).values[name]
+}
+
+func (e *Environment) AssignAt(distance int, name string, value interface{}) {
+	e.ancestor(distance).values[name] = value
+}
+
+func (e *Environment) ancestor(distance int) *Environment {
+	environment := e
+	for range distance {
+		environment = environment.Enclosing
+	}
+	return environment
+}
